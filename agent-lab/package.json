@@ -1,0 +1,24 @@
+{
+  "name": "agent-lab",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Node 版 Agent 最小示例：Function Call / RAG / MCP，一个下午跑通",
+  "scripts": {
+    "01": "tsx src/01-hello-llm.ts",
+    "02": "tsx src/02-function-call.ts",
+    "03": "tsx src/03-rag.ts",
+    "04": "tsx src/04-mcp.ts"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0",
+    "dotenv": "^16.4.5",
+    "openai": "^4.73.0",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.6.0"
+  }
+}

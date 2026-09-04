@@ -1,0 +1,38 @@
+# E2E 测试专用基础设施
+#
+# 与开发/生产容器（agent-hub-db / agent-hub-redis）完全隔离：
+#   - 独立容器名（agent-hub-test-*）
+#   - 固定弱密码 testpass（仅测试用，不入库）
+#   - 非冲突端口（5543 / 6381），与 setup-env.ts 里的默认值一一对应
+#
+# 用法：
+#   docker compose -f test/docker-compose.test.yml up -d
+#   DATABASE_URL='postgresql://postgres:testpass@localhost:5543/agent_hub_test?schema=public' npx prisma migrate deploy
+#   npm run test:e2e
+#   docker compose -f test/docker-compose.test.yml down
+services:
+  db:
+    image: postgres:16
+    container_name: agent-hub-test-db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: testpass
+      POSTGRES_DB: agent_hub_test
+    ports:
+      - '5543:5432'
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres']
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: agent-hub-test-redis
+    ports:
+      - '6381:6379'
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 5s
+      timeout: 3s
+      retries: 5

@@ -1,0 +1,77 @@
+name: agent-hub CI
+
+# agent-hub 后端持续集成：单元测试 + E2E 测试 + 构建。
+# E2E 依赖独立 PostgreSQL（5543）与 Redis（6381），通过 GitHub 服务容器提供，
+# 端口与 test/setup-env.ts 默认值一一对应，本地与 CI 行为完全一致。
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'agent-hub/**'
+      - '.github/workflows/agent-hub-ci.yml'
+  pull_request:
+    paths:
+      - 'agent-hub/**'
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: agent-hub
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: testpass
+          POSTGRES_DB: agent_hub_test
+        ports:
+          - 5543:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6381:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: agent-hub/package-lock.json
+
+      - name: 安装依赖
+        run: npm ci
+
+      - name: 生成 Prisma Client
+        run: npx prisma generate
+
+      - name: 迁移测试库
+        run: npx prisma migrate deploy
+        env:
+          DATABASE_URL: postgresql://postgres:testpass@localhost:5543/agent_hub_test?schema=public
+
+      - name: 单元测试
+        run: npm test
+
+      - name: E2E 测试
+        run: npm run test:e2e
+
+      - name: 构建
+        run: npm run build

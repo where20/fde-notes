@@ -1,0 +1,124 @@
+# ─────────────────────────────────────────────
+# 1. 敏感信息（核心，绝不能上传）
+# ─────────────────────────────────────────────
+**/.env
+**/.env.*
+!**/.env.example
+!**/.env.example.*
+
+# 历史误提交清理（如已不小心加过）
+**/.env.local
+**/.env.production
+**/.env.development
+**/.env.test
+
+# 凭证类
+*.pem
+*.key
+*.p12
+*.pfx
+*.keystore
+*.jks
+id_rsa
+id_rsa.pub
+id_ed25519
+id_ed25519.pub
+*.gpg
+
+# 云/容器/编辑器 secrets
+**/secrets/
+**/*.secret
+
+# ─────────────────────────────────────────────
+# 2. 依赖（~900M，绝不能上传）
+# ─────────────────────────────────────────────
+node_modules/
+**/node_modules/
+jspm_packages/
+
+# ─────────────────────────────────────────────
+# 3. 构建产物
+# ─────────────────────────────────────────────
+**/dist/
+**/build/
+**/out/
+**/.next/
+**/.nuxt/
+**/.svelte-kit/
+**/.cache/
+**/.vite/
+**/.turbo/
+**/.parcel-cache/
+**/coverage/
+**/.nyc_output/
+
+# TypeScript
+*.tsbuildinfo
+.tsbuildinfo
+
+# ─────────────────────────────────────────────
+# 4. 数据库 / Prisma 本地数据
+# ─────────────────────────────────────────────
+**/prisma/*.db
+**/prisma/*.db-journal
+**/prisma/dev.db
+**/prisma/dev.db-journal
+**/*.sqlite
+**/*.sqlite3
+**/*.db
+# ⚠️ schema.prisma 和 migrations/ 仍要提交
+
+# ─────────────────────────────────────────────
+# 5. 日志
+# ─────────────────────────────────────────────
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# ─────────────────────────────────────────────
+# 6. OS / IDE 临时
+# ─────────────────────────────────────────────
+.DS_Store
+.DS_Store?
+._*
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+.idea/
+.vscode/
+!.vscode/extensions.json
+!.vscode/settings.json.example
+*.swp
+*.swo
+*~
+
+# ─────────────────────────────────────────────
+# 7. WorkBuddy 沙箱与工作数据（个人数据，不上传）
+# ─────────────────────────────────────────────
+.asynctest*/
+.broker-test/
+.workbuddy/
+
+# ─────────────────────────────────────────────
+# 8. Docker / 部署产物
+# ─────────────────────────────────────────────
+**/.docker/
+
+# ─────────────────────────────────────────────
+# 9. 测试 / 临时上传
+# ─────────────────────────────────────────────
+**/tmp/
+**/temp/
+**/.tmp/
+**/.temp/
+**/uploads/
+
+# ─────────────────────────────────────────────
+# 10. VitePress 输出（如未来生成）
+# ─────────────────────────────────────────────
+docs/.vitepress/dist/
+docs/.vitepress/cache/

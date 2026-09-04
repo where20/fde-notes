@@ -1,0 +1,62 @@
+# ===== 生产部署（与开发版 docker-compose.yml 的区别）=====
+# 1. db / redis 不映射端口到宿主，只在 Docker 内网可访问（更安全）
+# 2. 全部服务加 restart: unless-stopped（宕机/重启自动拉起）
+# 3. app 只对外暴露 3000 端口
+# 用法：DOCKER_BUILDKIT=0 docker compose -f docker-compose.prod.yml up -d --build
+services:
+  db:
+    image: postgres:16
+    container_name: agent-hub-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: agent_hub
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres']
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    # 生产不暴露端口：只在 Docker 内网供 app 通过服务名 db 访问
+
+  redis:
+    image: redis:7-alpine
+    container_name: agent-hub-redis
+    restart: unless-stopped
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    # 生产不暴露端口：只在 Docker 内网供 app 通过服务名 redis 访问
+
+  app:
+    build: .
+    container_name: agent-hub-app
+    restart: unless-stopped
+    environment:
+      # 容器内连库/连 redis 都用服务名（不是宿主 localhost）
+      DATABASE_URL: postgresql://postgres:${DB_PASSWORD}@db:5432/agent_hub?schema=public
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN}
+      PORT: '3000'
+      REDIS_HOST: redis
+      REDIS_PORT: '6379'
+    ports:
+      - '3000:3000'
+    healthcheck:
+      test: ['CMD-SHELL', 'wget -q -O- http://localhost:3000/health > /dev/null 2>&1 || exit 1']
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+volumes:
+  db-data:

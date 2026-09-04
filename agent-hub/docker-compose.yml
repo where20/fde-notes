@@ -1,0 +1,56 @@
+services:
+  db:
+    image: postgres:16
+    container_name: agent-hub-db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: agent_hub
+    ports:
+      - '5433:5432'
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres']
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: agent-hub-redis
+    ports:
+      - '6379:6379'
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  app:
+    build: .
+    container_name: agent-hub-app
+    environment:
+      # 容器内连库用服务名 db（不是宿主 localhost:5433）
+      DATABASE_URL: postgresql://postgres:${DB_PASSWORD}@db:5432/agent_hub?schema=public
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN}
+      PORT: '3000'
+      # 容器内 Redis 用服务名 redis（不是宿主 localhost:6379）
+      REDIS_HOST: redis
+      REDIS_PORT: '6379'
+    ports:
+      - '3000:3000'
+    healthcheck:
+      test: ['CMD-SHELL', 'wget -q -O- http://localhost:3000/health > /dev/null 2>&1 || exit 1']
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+volumes:
+  db-data:
